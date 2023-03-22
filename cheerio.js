@@ -1,27 +1,28 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs');
+
+const AlabamaCitiesArray = require('./states/Alabama/AlabamaCitiesArray.js')
 
 const parse = async () => {
   const getHTML = async (url) => {
     const {data} = await axios.get(url);
     return cheerio.load(data);
   }
-  
-  const $ = await getHTML('https://www.quicktransportsolutions.com/truckingcompany/arkansas/readers-logistics-llc-usdot-3789667.php')
 
-  //----------------------------------------------------------------------------
-  const mcAndDateArray = [];
-  const adressArray = [];
+  const paginationArray = [];
 
-  const adress = $('address').text();
-  adressArray.push(adress)
+  // const alabama = await getHTML('https://www.quicktransportsolutions.com/carrier/alabama/trucking-companies.php')
 
-  const mcAndDate = $('td').each((i, element) => {
-    const data = $(element).text() 
-    mcAndDateArray.push(data)
-  })
+  for(city of AlabamaCitiesArray) {
+    let URL = `https://www.quicktransportsolutions.com/carrier/alabama/${city}.php` 
+    const $ = await getHTML(URL);
+    const pagination = $('.pagination').text();
+    console.log(pagination, city)
+  }
 }
 
 parse();
+
 
 
