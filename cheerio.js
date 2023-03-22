@@ -2,7 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
-const AlabamaCitiesArray = require('./states/Alabama/AlabamaCitiesArray.js')
+const arrAlab = ["adamsville", "addison", "adger",];
 
 const parse = async () => {
   const getHTML = async (url) => {
@@ -10,15 +10,24 @@ const parse = async () => {
     return cheerio.load(data);
   }
 
-  const paginationArray = [];
+  const URL = 'https://www.quicktransportsolutions.com/carrier/alabama/abbeville.php';
+  let content = '';
 
-  // const alabama = await getHTML('https://www.quicktransportsolutions.com/carrier/alabama/trucking-companies.php')
+  const $ = await getHTML(URL);
+  
+  const pagination = $('.pagination').text().split('');
+  const numberPagnation = pagination.map(el => +el).filter(el => el === Number(el))
 
-  for(city of AlabamaCitiesArray) {
-    let URL = `https://www.quicktransportsolutions.com/carrier/alabama/${city}.php` 
-    const $ = await getHTML(URL);
-    const pagination = $('.pagination').text();
-    console.log(pagination, city)
+  for(let i = 2; i <= numberPagnation.length; ++i) {
+   const urlP = await getHTML(`${URL}?page=${i}`) 
+    const a = urlP('.panel-body').each((j, element) => {
+      const pageContent = $(element).find('.well-sm').text()
+      fs.writeFile(`abbeville${i}.txt`, pageContent, err => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    });
   }
 }
 
