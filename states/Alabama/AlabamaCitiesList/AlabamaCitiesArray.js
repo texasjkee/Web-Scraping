@@ -508,5 +508,4 @@ const alabamaCitiesArray =
 "woodville",
 "york"]
 
-
 module.exports = alabamaCitiesArray;
