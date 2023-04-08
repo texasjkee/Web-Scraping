@@ -1,4 +1,3 @@
-
 const axios = require('axios'); 
 const cheerio = require('cheerio'); 
 const fs = require('fs'); 
@@ -16,57 +15,69 @@ const parse = async () => {
     return cheerio.load(data);
   }
 
-  for(city of STATE_CITIES) {
-    const citiesURL = await ParseAllCompaniesInCity(city);
+  // for(let city of STATE_CITIES) {
+    // const citiesUrl = await ParseAllCompaniesInCity(city);
     
-    console.log(citiesURL)
-    // for(URL2 of paginationUrlArr) {
-    //   const contentCitiesPages = [];
+    // for(let URL of citiesUrl) {
+      const contentCitiesPages = [];
+      // const URL = `https://www.quicktransportsolutions.com/truckingcompany/alabama/marcus-crabb-usdot-3560034.php`
+      // const URLwithSince = `https://www.quicktransportsolutions.com/truckingcompany/alabama/highly-favorite-llc-usdot-1290715.php`;
+      // const URLwithMc = `https://www.quicktransportsolutions.com/truckingcompany/alabama/horizon-transportation-logistics-inc-usdot-3553062.php`
+      const URLwithFax = `https://www.quicktransportsolutions.com/truckingcompany/alabama/jerome-hollis-usdot-970491.php`
+      const $ = await getHTML(URLwithFax);
 
-    //   const $ = await getHTML(paginationUrlArr[0]);
+      let dataText = '';
 
-    //   let dataText = '';
+      // const links = $('.well')
+      //   .each((i, el) => {
+      //     const foundLink = ($(el).find('a').attr("href"))
+      //     contentCitiesPages.push(foundLink)
+      //   });
+      
+      // const allData = {
+      //   sinceData: [],
+      //   addressData: [],
+      //   state: CURRENT_STATE,
+      //   city: STATE_CITIES
+      // }
+      
+      const companyDate = {
+        name: null,
+        mc: null,
+        phone: null,
+        since: null,
+      }
+      
+      const getColumData = $('.col-md-12').each((i, data) => {
 
-    //   const links = $('.well')
-    //     .each((i, el) => {
-    //       const foundLink = ($(el).find('a').attr("href"))
-    //       contentCitiesPages.push(foundLink)
-    //     });
+        //TO_DO: think || and &&, example (if i === 1 || 2);
+        //       includes('MC') true or false;
+      
+        if(i === 1) {
+          const columData = $(data).text(); 
 
-  // const allData = {
-  //   sinceData: [],
-  //   addressData: [],
-  //   state: [],
-  //   city: [],
-  // }
+          const companyData = columData.split('\n')[1];
+          const companyName = companyData.split('is')[0];
+          const mcIndex = companyData.search('MC')
+          const companyMc = companyData.slice(mcIndex);
+          console.log(companyName);
+          console.log(companyMc)
+        }
 
-  // const parseCurrentCompanyData = $('td').each((i, el) => {
-  //   const since = $(el).text();
+        // if(i === 2) {
+        //   const columData = $(data).text(); 
+        //   const foundPhone = columData.match(/\d{3}-\d{3}-\d{4}/g)[0];
+        //   console.log(foundPhone)
+        //   // companyDate.phone = foundPhone;
+        // }
+      })
 
-  //   if(allData.sinceData.length < 24) {
-  //     allData.sinceData.push(since) 
-  //   }
-
-  //   const address = $('address').text();
-  //   allData.addressData.push(address); 
-  // });
-  
-  // allData.state.push(CURRENT_STATE)
-  // allData.city.push(city)
-
-  // const mc = allData.sinceData[11]
-
-  // if(checkMcFunc(mc)) {
-  //   dataText += transformFunc(allData)
-  // } 
-
-  // fs.appendFile(`states/${CURRENT_STATE}/${city}.txt`, dataText, err => {
-  //   if (err) {
-  //     console.error(err);
-  //   }
-  // });
-}
-}
-  // }
+      fs.appendFile(`states/${CURRENT_STATE}/problemCity.txt`, dataText, err => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    // }
+  }
 // }
 parse();
