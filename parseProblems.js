@@ -1,12 +1,13 @@
+const CURRENT_STATE = 'Alabama';
+const STATE_CITIES = require('./states/Alabama/AlabamaCitiesList/AlabamaCitiesArray.js');
+// const STATE_CITIES = ['city'];
+
 const axios = require('axios'); 
 const cheerio = require('cheerio'); 
 const fs = require('fs'); 
 
 const ParseAllCompaniesPages = require('./Parse/ParseAllCompaniesPages.js');
 const transformFunc = require('./finalFunc.js');
- 
-const STATE_CITIES = ['auburn'];
-const CURRENT_STATE = 'Alabama';
 
 const parse = async () => {
   const getHTML = async (url) => {
@@ -15,16 +16,17 @@ const parse = async () => {
   }
 
   for(let city of STATE_CITIES) {
-    const pagesUrl = await ParseAllCompaniesPages(city);
-
+    const pagesUrl = await ParseAllCompaniesPages(CURRENT_STATE, city);
     for(let URL of pagesUrl) {
+      // console.log(URL)
       const $ = await getHTML(URL);
       const companiesUrlOnPage = [];
 
       const domElem= $("*[itemtype = 'https://schema.org/Organization']")
         .each((i, el) => {
           const data = $(el).text();
-          const mc = data.includes('MC');
+          const mcIndex = data.search(/MC/g);
+          const mc = Number(data[mcIndex + 3]);
           if(mc) {
             const foundLink = ($(el).find('a').attr("href"))
             companiesUrlOnPage.push(foundLink);
@@ -33,7 +35,6 @@ const parse = async () => {
 
       for(let company of companiesUrlOnPage) {
         const $ = await getHTML(company);
-
         const companyDate = {
           state: null,
           city: null,
@@ -83,4 +84,5 @@ const parse = async () => {
     }
   }
 }
+
 parse();
