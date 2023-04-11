@@ -2,12 +2,6 @@ const axios = require('axios');
 const cheerio = require('cheerio'); 
 const fs = require('fs'); 
 
-// const URL = `https://www.quicktransportsolutions.com/truckingcompany/alabama/marcus-crabb-usdot-3560034.php`
-// const URLwithSince = `https://www.quicktransportsolutions.com/truckingcompany/alabama/highly-favorite-llc-usdot-1290715.php`;
-// const URLwithMc = `https://www.quicktransportsolutions.com/truckingcompany/alabama/horizon-transportation-logistics-inc-usdot-3553062.php`
-// const URLwithFax = `https://www.quicktransportsolutions.com/truckingcompany/alabama/jerome-hollis-usdot-970491.php`
-
-// const checkMcFunc = require('./checkMcFunc.js');
 const ParseAllCompaniesPages = require('./Parse/ParseAllCompaniesPages.js');
 const transformFunc = require('./finalFunc.js');
  
@@ -20,69 +14,71 @@ const parse = async () => {
     return cheerio.load(data);
   }
 
-for(let city of STATE_CITIES) {
-  const pagesUrl = await ParseAllCompaniesPages(city);
-  for(let URL of pagesUrl) {
-    const $ = await getHTML(URL);
-    const companyOnPage = [];
+  for(let city of STATE_CITIES) {
+    const pagesUrl = await ParseAllCompaniesPages(city);
 
-    const links = $('.well')
-      .each((i, el) => {
-        const foundLink = ($(el).find('a').attr("href"))
-        companyOnPage.push(foundLink)
-      });
-    for(let company of companyOnPage) {
-      const $ = await getHTML(company);
-      console.log(company)
+    for(let URL of pagesUrl) {
+      const $ = await getHTML(URL);
+      const companiesUrlOnPage = [];
 
-      const companyDate = {
-        state: null,
-        city: null,
-        mc: null,
-        name: null,
-        phone: null,
-        since: null,
-      }
-      
-      const getColumData = $('.col-md-12').each((i, data) => {
-        //TO_DO: think || and &&, example (if i === 1 || 2);
-        //       includes('MC') true or false;
-      
-        if(i === 1) {
-          const columData = $(data).text(); 
+      const domElem= $("*[itemtype = 'https://schema.org/Organization']")
+        .each((i, el) => {
+          const data = $(el).text();
+          const mc = data.includes('MC');
+          if(mc) {
+            const foundLink = ($(el).find('a').attr("href"))
+            companiesUrlOnPage.push(foundLink);
+          }
+        });
 
-          const sinceIndex = columData.search('since');
-          console.log(sinceIndex)
-          const since = sinceIndex !== -1 ? columData.slice(sinceIndex).match(/\d{8}/)[0] : ' ';
+      for(let company of companiesUrlOnPage) {
+        const $ = await getHTML(company);
 
-          const companyData = columData.split('\n')[1];
-          const name = companyData.split('is')[0];
-
-          const mcIndex = companyData.search('MC')
-          const companyMc = companyData.slice(mcIndex);
-
-          companyDate.state = CURRENT_STATE;
-          companyDate.city = city;
-          companyDate.mc = companyMc;
-          companyDate.name = name;
-          companyDate.since = since;
-          console.log(name);
+        const companyDate = {
+          state: null,
+          city: null,
+          mc: null,
+          name: null,
+          phone: null,
+          since: null,
         }
+        
+        const getColumData = $('.col-md-12').each((i, data) => {
+        
+          if(i === 1) {
+            const columData = $(data).text(); 
 
-        if(i === 2) {
-          const columData = $(data).text(); 
-          const foundPhone = columData.match(/\d{3}-\d{3}-\d{4}/g)[0];
-          companyDate.phone = foundPhone;
-        }
-      })
-      
-      const validCompanyData = transformFunc(companyDate);      
-      
-      fs.appendFile(`states/${CURRENT_STATE}/${city}.txt`, validCompanyData, err => {
-        if (err) {
-          console.error(err);
-        }
-      });
+            const sinceIndex = columData.search('since');
+            const since = sinceIndex !== -1 ? columData.slice(sinceIndex).match(/\d{8}/)[0] : 'since';
+
+            const companyData = columData.split('\n')[1];
+            const name = companyData.split('is')[0];
+
+            const mcIndex = companyData.search('MC')
+            const companyMc = companyData.slice(mcIndex);
+
+            companyDate.state = CURRENT_STATE;
+            companyDate.city = city;
+            companyDate.mc = companyMc;
+            companyDate.name = name;
+            companyDate.since = since;
+            console.log(name);
+          }
+
+          if(i === 2) {
+            const columData = $(data).text(); 
+            const foundPhone = columData.match(/\d{3}-\d{3}-\d{4}/g)[0];
+            companyDate.phone = foundPhone;
+          }
+        })
+        
+        const validCompanyData = transformFunc(companyDate);      
+        
+        fs.appendFile(`states/${CURRENT_STATE}/${city}.txt`, validCompanyData, err => {
+          if (err) {
+            console.error(err);
+          }
+        });
       }
     }
   }
